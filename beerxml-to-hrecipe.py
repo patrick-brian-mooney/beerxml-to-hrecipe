@@ -1,14 +1,17 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """This is a quick script to take a BeerXML file and use it to produce an
-h-recipe-marked HTML version of the recipe. Primarily intended to avoid
-duplicating data entry work on my own brewing blog: http://is.gd/XPBrewing.
+HTML version of the recipe that is marked up with the h-recipe microformat.
+h-recipe is documented at http://microformats.org/wiki/h-recipe. This script is
+primarily intended to avoid duplicating data entry work on my own brewing blog:
+http://is.gd/XPBrewing.
 
-This script is copyright 2017 by Patrick Mooney. It is licensed under the GNU
+This script is copyright 2017-18 by Patrick Mooney. It is licensed under the GNU
 GPL, either version 3 or (at your option) any later version. See the file
 LICENSE.md for details.
 
-Note that this uses Python 2.X because pybeerxml currently requires that.
+Note that this script is now a Python 3 script, because pyBeerXML now uses
+Python 3. Python 2.X is no longer supported.
 """
 
 
@@ -40,16 +43,8 @@ def convert_to_hrecipe(i_file, o_file):
         log_it('INFO: HTML header written', 3)
         log_it('INFO: there are %d recipes' % len(recipes), 2)
         for r in recipes:
-            # First, some basic recipe parameters
-            output_file.write('<h2>%s</h2>\n\n' % r.name)
-            output_file.write('<dl>\n<dt>O.G.:</dt> <dd>%.3f</dd>\n' % r.og)
-            output_file.write('<dt>F.G.:</dt> <dd>%.3f</dd>\n' % r.fg)
-            output_file.write('<dt>IBU:</dt> <dd>%.2f</dd>\n' % r.ibu)
-            output_file.write('<dt>ABV.:</dt> <dd>%.2f</dd></dl>\n' % r.abv)
-            log_it('INFO: basic recipe information written for recipe "%s"' % r.name, 3)
-
             # Next, ingredients
-            output_file.write('<h3>Ingredients</h3>\n\n<ul>\n')
+            output_file.write('\n\n<h2 id="ingredients">Ingredients</h2>\n\n<ul class="h-recipe">\n')
             log_it('INFO: there are %d fermentables' % len(r.fermentables), 2)
             for f in r.fermentables:
                 log_it('INFO: creating line for fermentable %s' % f.name, 3)
@@ -63,12 +58,35 @@ def convert_to_hrecipe(i_file, o_file):
                 log_it('INFO: creating line for yeast %s' % y.name, 3)
                 output_file.write('  <li class="p-ingredient">%s %s</li>\n' % (y.laboratory, y.name))
             output_file.write('</ul>')
-        output_file.write("\n</body>\n</html>")
 
+        output_file.write('\n\n<h2 id="procedure">Procedure</h2>\n')
+        output_file.write('<div class="e-instructions">\n<p>Write-up goes here.</p>\n</div>\n')
+
+        output_file.write('\n<p class="vcalendar"><span class="vevent"><strong class="summary description">Brew day</strong>: <abbr title="" class="dtstart">date</abbr></span><br />\n')
+        output_file.write('<strong>Predicted original gravity:</strong> %.4f<br />\n' % r.og)
+        output_file.write('<strong>Measured original gravity:</strong> <br />\n')
+        output_file.write('<strong>Estimated IBUs:</strong> %.1f<br />\n' % r.ibu)
+        output_file.write('<strong>Predicted final gravity</strong> %.4f<br />\n' % r.fg)
+        output_file.write('<strong>Predicted ABV:</strong> %.1f<br />\n' % r.abv)
+
+        output_file.write('\n<span class="vevent"><strong class="summary description">Bottling day </strong>: <abbr title="" class="dtstart">date</abbr></span><br />\n')
+        output_file.write('<strong>Final gravity:</strong> <br />\n')
+        output_file.write('<strong>Estimated ABV:</strong></p>\n')
+
+        output_file.write('\n<p><strong>Yield</strong>:</p>\n')
+        output_file.write('<ul>\n<li></li>\n</ul>\n')
+        output_file.write('<p><strong>Total yield:</strong></p>\n')
+        log_it('INFO: recipe summary information written for recipe "%s"' % r.name, 3)
+
+        log_it('<h2 id="observations">Observations</h2>\n')
+        log_it('<ul class="vcalendar xoxo">\n<li></li>\n</ul>')
+ 
+        output_file.write("\n</body>\n</html>")
+        log_it('Output file written!')
 
 if __name__ == "__main__":
     if force_test:
-        convert_to_hrecipe('/home/patrick/Documents/writing/blogs/XPB/beerXML/064.xml', '/home/patrick/Desktop/something.html')
+        convert_to_hrecipe('/home/patrick/Documents/writing/blogs/XPB/beerXML/098.xml', '/home/patrick/Desktop/something.html')
     else:
         parser = argparse.ArgumentParser(epilog=__doc__)
         parser.add_argument('-i', '--input',  help="specify the input file.", required=True)
